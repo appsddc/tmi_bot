@@ -45,13 +45,14 @@ def _get_youtube_transcript(url: str) -> str | None:
         return None
 
     try:
-        transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=["en", "en-GB"])
+        ytt = YouTubeTranscriptApi()
+        fetched = ytt.fetch(video_id, languages=["en", "en-GB"])
         # Join all segments into a single readable string with rough timestamps
         chunks = []
-        for entry in transcript_list:
-            minutes = int(entry["start"] // 60)
-            seconds = int(entry["start"] % 60)
-            chunks.append(f"[{minutes:02d}:{seconds:02d}] {entry['text']}")
+        for snippet in fetched.snippets:
+            minutes = int(snippet.start // 60)
+            seconds = int(snippet.start % 60)
+            chunks.append(f"[{minutes:02d}:{seconds:02d}] {snippet.text}")
         return "\n".join(chunks)
 
     except NoTranscriptFound:
