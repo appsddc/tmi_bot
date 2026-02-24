@@ -2,15 +2,5 @@
   command = "pip install -r requirements.txt"
   functions = "netlify/functions"
 
-[functions]
-  # We remove the node_bundler and external_modules lines 
-  # as they are only for Javascript functions.
-  # This section can remain empty or be used for general settings.
-
-[[functions]]
-  name = "daily_briefing"
-  schedule = "0 8 * * *" 
-
-[[functions]]
-  name = "telegram_webhook"
-  # No schedule here, this is your on-demand bot
+[functions."daily_briefing"]
+  schedule = "0 8 * * *"
