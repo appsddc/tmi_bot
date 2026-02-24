@@ -1,0 +1,5 @@
+google-genai
+python-dotenv
+youtube-transcript-api
+requests
+# feedparser==6.0.10

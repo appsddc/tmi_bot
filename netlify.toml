@@ -1,0 +1,12 @@
+[build]
+  command = "pip install -r requirements.txt"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild" # Best for performance
+  external_node_modules = ["youtube-transcript-api", "feedparser"]
+
+# This is your "Cadence" guardrail
+[[functions]]
+  name = "daily_briefing"
+  schedule = "0 8 * * *" # Runs every day at 08:00 UTC (9:00 AM Kildare time)
