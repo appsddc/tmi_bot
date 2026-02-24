@@ -1,5 +1,6 @@
-google-genai
-python-dotenv
-youtube-transcript-api
-requests
-# feedparser==6.0.10
+flask>=3.0.0
+requests>=2.31.0
+feedparser>=6.0.11
+youtube-transcript-api>=0.6.2
+anthropic>=0.25.0
+gunicorn>=21.2.0

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: tmi-bot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: MY_CHAT_ID
+        sync: false
+
+  - type: cron
+    name: tmi-daily-briefing
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    # Hits the /run-briefing endpoint on the web service every day at 8am UTC
+    startCommand: python -c "import requests; requests.get('https://tmi-bot.onrender.com/run-briefing')"
+    schedule: "0 8 * * *"
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: MY_CHAT_ID
+        sync: false
