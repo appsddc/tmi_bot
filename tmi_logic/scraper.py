@@ -2,7 +2,13 @@ import re
 import logging
 import feedparser
 import requests
-from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
+
+try:
+    from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
+    YT_AVAILABLE = True
+except ImportError as e:
+    print(f"WARNING: youtube-transcript-api import failed: {e}")
+    YT_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +45,10 @@ def _extract_youtube_id(url: str) -> str | None:
 
 def _get_youtube_transcript(url: str) -> str | None:
     """Fetch auto-generated or manual captions from YouTube."""
+    if not YT_AVAILABLE:
+        logger.error("youtube-transcript-api is not available — import failed at startup.")
+        return None
+
     video_id = _extract_youtube_id(url)
     if not video_id:
         logger.warning(f"Could not extract YouTube video ID from: {url}")
@@ -47,7 +57,6 @@ def _get_youtube_transcript(url: str) -> str | None:
     try:
         ytt = YouTubeTranscriptApi()
         fetched = ytt.fetch(video_id, languages=["en", "en-GB"])
-        # Join all segments into a single readable string with rough timestamps
         chunks = []
         for snippet in fetched.snippets:
             minutes = int(snippet.start // 60)
@@ -71,12 +80,8 @@ def _get_podcast_transcript(url: str) -> str | None:
     For non-YouTube URLs, try to get useful text from:
     1. RSS feed description/show notes (often contains key topics)
     2. Raw page content as a fallback
-    
-    Note: Full podcast transcripts via RSS are rare — this gives the LLM
-    enough context (title + description) to do a partial analysis.
     """
     try:
-        # Try treating it as an RSS feed directly
         feed = feedparser.parse(url)
         if feed.entries:
             entry = feed.entries[0]
@@ -85,16 +90,13 @@ def _get_podcast_transcript(url: str) -> str | None:
             content = entry.get("content", [{}])[0].get("value", "")
             return f"TITLE: {title}\n\nSHOW NOTES:\n{summary or content}"
 
-        # Fall back to fetching the page and pulling readable text
         headers = {"User-Agent": "Mozilla/5.0"}
         resp = requests.get(url, headers=headers, timeout=15)
         resp.raise_for_status()
 
-        # Very basic text extraction — strips HTML tags
         text = re.sub(r"<[^>]+>", " ", resp.text)
         text = re.sub(r"\s+", " ", text).strip()
 
-        # Return first 8000 chars — enough for LLM context without blowing token limits
         return text[:8000] if text else None
 
     except Exception as e:
